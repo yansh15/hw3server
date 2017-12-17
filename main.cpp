@@ -41,7 +41,7 @@ int main() {
             exit(1);
         }
 
-        thread t([&](){
+        thread t([client, &controller](){
             fprintf(stderr, "Connect to client %s:%u, client socket fd: %d\n", client->getIP(), client->getport(), client->getSocketFd());
             ReadRingBuffer<8192> buffer;
             while (true) {
