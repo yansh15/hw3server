@@ -17,6 +17,7 @@ public:
     int64_t getInt64(const char* key);
     template <typename T>
     std::vector<T> getArray(const char* key);
+    std::string getBuffer(const char* key);
     template <typename T>
     T getClass(const char* key);
 private:
@@ -53,9 +54,17 @@ std::vector<std::string> JsonReader::getArray<std::string>(const char *key) {
 template <>
 std::vector<int64_t> JsonReader::getArray<int64_t>(const char *key) {
     rapidjson::Value& value = document[key];
-    std::vector<int64_t > ret;
+    std::vector<int64_t> ret;
     for (const rapidjson::Value& item : value.GetArray())
         ret.push_back(item.GetInt64());
+    return ret;
+}
+
+std::string JsonReader::getBuffer(const char *key) {
+    rapidjson::Value& value = document[key];
+    std::string ret;
+    for (const rapidjson::Value& item : value.GetArray())
+        ret.push_back(static_cast<unsigned char>(item.GetInt()));
     return ret;
 }
 
@@ -63,6 +72,12 @@ template <>
 MessageInfo JsonReader::getClass<MessageInfo>(const char *key) {
     rapidjson::Value& value = document[key];
     return MessageInfo(value["username"].GetString(), value["message"].GetString(), value["time"].GetInt64());
+}
+
+template <>
+FileInfo JsonReader::getClass<FileInfo>(const char *key) {
+    rapidjson::Value& value = document[key];
+    return FileInfo(value["username"].GetString(), value["size"].GetInt64(), value["filename"].GetString(), value["uuid"].GetString(), value["time"].GetInt64());
 }
 
 #endif //SERVER_JSONREADER_H

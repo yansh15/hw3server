@@ -3,8 +3,10 @@
 
 #include <cstdint>
 
-const uint16_t PORT = 8040;
+const uint16_t PORT = 8052;
 const int MAXCLIENTNUM = 20;
+
+const int FILEBLOCKSIZE = 65536;
 
 // Request op
 const int REGISTEROP = 0;
@@ -13,6 +15,14 @@ const int QUITOP = 2;
 const int SEARCHOP = 3;
 const int ADDOP = 4;
 const int SENDMESSAGEOP = 5;
+const int SENDFILEOP = 6;
+const int SENDFILEDATASTARTOP = 7;
+const int SENDFILEDATAOP = 8;
+const int SENDFILEDATAENDOP = 9;
+const int RECEIVEFILEOP = 10;
+const int RECEIVEFILEDATASTARTOP = 11;
+const int RECEIVEFILEDATAOP = 12;
+const int RECEIVEFILEDATAENDOP = 13;
 
 // Public status
 const int SUCCESS = 0;

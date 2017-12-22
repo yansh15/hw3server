@@ -89,7 +89,7 @@ class JsonClassWritter<FileInfo> {
 public:
     JsonClassWritter(rapidjson::Document::AllocatorType& a, const FileInfo& file) : value(rapidjson::kObjectType) {
         rapidjson::Value v1;
-        v1.SetString(file.username.c_str(), file.username.size(), a);
+        v1.SetString(file.subject.c_str(), file.subject.size(), a);
         value.AddMember(rapidjson::Value("username"), v1, a);
         rapidjson::Value v2;
         v2.SetInt64(file.size);

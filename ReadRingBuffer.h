@@ -39,6 +39,7 @@ public:
     void putCharArray(char *arr, unsigned long n);
 
     uint16_t lookAheadUInt16LE() const;
+    uint32_t lookAheadUInt32LE() const;
 
 private:
     char *buffer;
@@ -256,7 +257,9 @@ template<unsigned long SIZE>
 std::string ReadRingBuffer<SIZE>::getString(unsigned long n) {
     auto *tmp = new char[n];
     getNBytes(tmp, n);
-    return std::string(tmp, n);
+    std::string ret(tmp, n);
+    delete[] tmp;
+    return ret;
 }
 
 template<unsigned long SIZE>
@@ -279,6 +282,13 @@ uint16_t ReadRingBuffer<SIZE>::lookAheadUInt16LE() const {
     char tmp[sizeof(uint16_t)];
     lookAheadNBytes(tmp, sizeof(uint16_t));
     return *(uint16_t*)tmp;
+}
+
+template<unsigned long SIZE>
+uint32_t ReadRingBuffer<SIZE>::lookAheadUInt32LE() const {
+    char tmp[sizeof(uint32_t)];
+    lookAheadNBytes(tmp, sizeof(uint32_t));
+    return *(uint32_t *)tmp;
 }
 
 #endif //SERVER_READRINGBUFFER_H

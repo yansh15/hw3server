@@ -7,6 +7,7 @@
 
 #include "Constant.h"
 #include "Controller.h"
+#include "Timer.h"
 
 using namespace std;
 
@@ -34,6 +35,16 @@ int main() {
     }
     fprintf(stderr, "Listen the port: %u successfully.\n", tcpServer.getPort());
 
+    /*thread timer([&controller]() {
+        Timer timer;
+        timer.start(10000, [&controller]() {
+            ofstream fout("user.db", ios::binary);
+            controller.serialize(fout);
+            fout.close();
+        });
+    });
+    timer.detach();*/
+
     while (true) {
         TcpSocket *client = tcpServer.accept();
         if (client == nullptr) {
@@ -41,9 +52,9 @@ int main() {
             exit(1);
         }
 
-        thread t([client, &controller](){
+        thread t([client, &controller]() {
             fprintf(stderr, "Connect to client %s:%u, client socket fd: %d\n", client->getIP(), client->getport(), client->getSocketFd());
-            ReadRingBuffer<8192> buffer;
+            ReadRingBuffer<131072> buffer;
             while (true) {
                 if (Controller::havaEntireRequest(buffer)) {
                     controller.handleEntireRequest(buffer, client);

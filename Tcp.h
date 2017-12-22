@@ -9,30 +9,6 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-namespace SocketAPI {
-    int cSocket(int domain, int type, int protocol) {
-        return socket(domain, type, protocol);
-    }
-    bool cBind(int fd, const sockaddr * addr, socklen_t len) {
-        return bind(fd, addr, len) != -1;
-    }
-    bool cListen(int fd, int n) {
-        return listen(fd, n) != -1;
-    }
-    bool cClose(int fd) {
-        return close(fd) != -1;
-    }
-    int cAccept (int fd, sockaddr *addr, socklen_t *len) {
-        return accept(fd, addr, len);
-    }
-    ssize_t cRead (int fd, void *buf, size_t nbytes) {
-        return read(fd, buf, nbytes);
-    }
-    ssize_t cWrite (int fd, const void *buf, size_t n) {
-        return write(fd, buf, n);
-    }
-}
-
 class TcpSocket {
 public:
     TcpSocket() = delete;
@@ -52,7 +28,9 @@ public:
     int getSocketFd() const;
 
     std::string read(unsigned long);
-    ssize_t write(const std::string&);
+    ssize_t write(const std::string& header);
+    ssize_t write(const std::string& header, const std::string& body);
+    bool shutdown();
     bool close();
 private:
     int socketfd;
@@ -104,20 +82,38 @@ int TcpSocket::getSocketFd() const {
 
 std::string TcpSocket::read(unsigned long n) {
     char *buf = new char[n];
-    unsigned long len = SocketAPI::cRead(socketfd, buf, n);
+    unsigned long len = ::read(socketfd, buf, n);
     return std::string(buf, len);
 }
 
-ssize_t TcpSocket::write(const std::string& str) {
-    uint16_t len = str.size();
-    SocketAPI::cWrite(socketfd, (void*)&len, sizeof(uint16_t));
-    return SocketAPI::cWrite(socketfd, str.data(), str.size()) + sizeof(uint16_t);
+ssize_t TcpSocket::write(const std::string& header) {
+    uint32_t len = sizeof(uint16_t) + header.size();
+    uint16_t headerLen = header.size();
+    ::write(socketfd, (void*)&len, sizeof(uint32_t));
+    ::write(socketfd, (void*)&headerLen, sizeof(uint16_t));
+    return ::write(socketfd, header.data(), header.size()) + sizeof(uint16_t) + sizeof(uint32_t);
+}
+
+ssize_t TcpSocket::write(const std::string& header, const std::string& body) {
+    uint32_t len = sizeof(uint16_t) + header.size() + body.size();
+    uint16_t headerLen = header.size();
+    ::write(socketfd, (void*)&len, sizeof(uint32_t));
+    ::write(socketfd, (void*)&headerLen, sizeof(uint16_t));
+    ssize_t ret1 = ::write(socketfd, header.data(), header.size());
+    ssize_t ret2 = ::write(socketfd, body.data(), body.size());
+    return ret1 + ret2 + sizeof(uint16_t) + sizeof(uint32_t);
+}
+
+bool TcpSocket::shutdown() {
+    if (socketfd < 0)
+        return true;
+    return ::shutdown(socketfd, 2) != -1;
 }
 
 bool TcpSocket::close() {
     if (socketfd < 0)
         return true;
-    return SocketAPI::cClose(socketfd);
+    return ::close(socketfd) != -1;
 }
 
 class TcpServer {
@@ -186,7 +182,7 @@ int TcpServer::getMaxClientNum() {
 }
 
 bool TcpServer::open() {
-    socketfd = SocketAPI::cSocket(AF_INET, SOCK_STREAM, 0);
+    socketfd = ::socket(AF_INET, SOCK_STREAM, 0);
     return socketfd >= 0;
 }
 
@@ -195,23 +191,23 @@ bool TcpServer::bind() {
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    return SocketAPI::cBind(socketfd, (sockaddr *)&addr, sizeof(addr));
+    return ::bind(socketfd, (sockaddr *)&addr, sizeof(addr)) != -1;
 }
 
 bool TcpServer::listen() {
-    return SocketAPI::cListen(socketfd, maxClientNum);
+    return ::listen(socketfd, maxClientNum) != -1;
 }
 
 bool TcpServer::close() {
     if (socketfd < 0)
         return true;
-    return SocketAPI::cClose(socketfd);
+    return ::close(socketfd) != -1;
 }
 
 TcpSocket *TcpServer::accept() {
     sockaddr_in clientAddr;
     socklen_t len = sizeof(clientAddr);
-    int clientfd = SocketAPI::cAccept(socketfd, (sockaddr*)&clientAddr, &len);
+    int clientfd = ::accept(socketfd, (sockaddr*)&clientAddr, &len);
     if (clientfd < 0)
         return nullptr;
     char ip[20];
