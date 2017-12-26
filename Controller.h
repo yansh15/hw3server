@@ -270,6 +270,14 @@ bool Controller::handleLoginRequest(const std::string &uuid, const std::string &
         client->write(writter.getString());
         return true;
     }
+    if (iter->second.isLogin()) {
+        JsonWritter writter;
+        writter.addMember("action", LOGINOP);
+        writter.addMember("uuid", uuid);
+        writter.addMember("status", ALREADYLOGIN);
+        client->write(writter.getString());
+        return true;
+    }
     auto clientIter = globalUserClientInfo.find(client);
     if (clientIter != globalUserClientInfo.end()) {
         globalUserInfo.find(clientIter->second)->second.quit();
@@ -289,12 +297,12 @@ bool Controller::handleLoginRequest(const std::string &uuid, const std::string &
     JsonArrayWritter messages(writter.getAllocator());
     for (const auto& m : iter->second.messages)
         messages.addClass(m);
-    //iter->second.messages.clear();
+    iter->second.messages.clear();
     writter.addArray("messages", messages);
     JsonArrayWritter files(writter.getAllocator());
     for (const auto& f : iter->second.files)
         files.addClass(f);
-    //iter->second.files.clear();
+    iter->second.files.clear();
     writter.addArray("files", files);
     client->write(writter.getString());
     return true;
@@ -452,7 +460,7 @@ bool Controller::handleSendFileDataEndRequest(const std::string &uuid, TcpSocket
     auto object = globalUserInfo.find(fileIter->second.object);
     if (object->second.isLogin()) {
         JsonWritter objectWritter;
-        objectWritter.addMember("action", SENDFILEDATAENDOP);
+        objectWritter.addMember("action", SENDFILEOP);
         objectWritter.addMember("uuid", "message");
         objectWritter.addMember("status", SUCCESS);
         objectWritter.addClass("file", fileIter->second);

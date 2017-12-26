@@ -35,7 +35,7 @@ int main() {
     }
     fprintf(stderr, "Listen the port: %u successfully.\n", tcpServer.getPort());
 
-    /*thread timer([&controller]() {
+    thread timer([&controller]() {
         Timer timer;
         timer.start(10000, [&controller]() {
             ofstream fout("user.db", ios::binary);
@@ -43,7 +43,7 @@ int main() {
             fout.close();
         });
     });
-    timer.detach();*/
+    timer.detach();
 
     while (true) {
         TcpSocket *client = tcpServer.accept();

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-const uint16_t PORT = 8052;
+const uint16_t PORT = 8053;
 const int MAXCLIENTNUM = 20;
 
 const int FILEBLOCKSIZE = 65536;
@@ -33,5 +33,6 @@ const int USERNAMEEXIST = 2;
 // Login status
 const int USERNAMENOTEXIST = 2;
 const int PASSWORDWRONG = 3;
+const int ALREADYLOGIN = 4;
 
 #endif //SERVER_CONST_H

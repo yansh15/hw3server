@@ -83,7 +83,9 @@ int TcpSocket::getSocketFd() const {
 std::string TcpSocket::read(unsigned long n) {
     char *buf = new char[n];
     unsigned long len = ::read(socketfd, buf, n);
-    return std::string(buf, len);
+    std::string ret(buf, len);
+    delete[] buf;
+    return ret;
 }
 
 ssize_t TcpSocket::write(const std::string& header) {
